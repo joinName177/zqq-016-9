@@ -151,9 +151,23 @@ export function buildCounterfactualTree(assumption: string): CounterfactualTree 
   };
 }
 
+/**
+ * 统一的节点可操作状态：节点自身未被修剪，且其所有祖先也均未被修剪。
+ * 树视图的按钮启用/禁用与引擎的浇水、修剪、采集守卫都以该判定为唯一来源。
+ */
+export function isNodeActionable(tree: CounterfactualTree, nodeId: string): boolean {
+  let current: LifeNode | undefined = tree.nodes[nodeId];
+  while (current) {
+    if (current.isPruned) return false;
+    current = current.parentId ? tree.nodes[current.parentId] : undefined;
+  }
+  return Boolean(tree.nodes[nodeId]);
+}
+
 export function waterBranch(tree: CounterfactualTree, nodeId: string): CounterfactualTree {
   const target = tree.nodes[nodeId];
-  if (!target) return tree;
+  // 已被修剪或处于已修剪枝桠下游的节点不可再浇水，避免在枯枝上催生“鲜活”的奇遇后代
+  if (!target || !isNodeActionable(tree, nodeId)) return tree;
 
   target.vitality = Math.min(100, target.vitality + 20);
   target.waterCount += 1;
@@ -186,6 +200,10 @@ export function waterBranch(tree: CounterfactualTree, nodeId: string): Counterfa
 }
 
 export function pruneBranch(tree: CounterfactualTree, nodeId: string): CounterfactualTree {
+  const target = tree.nodes[nodeId];
+  // 已处于修剪枝桠下游的节点无需重复修剪
+  if (!target || !isNodeActionable(tree, nodeId)) return tree;
+
   const pruneRecursive = (id: string) => {
     const n = tree.nodes[id];
     if (!n) return;
@@ -201,6 +219,8 @@ export function pruneBranch(tree: CounterfactualTree, nodeId: string): Counterfa
 export function harvestSpecimen(tree: CounterfactualTree, nodeId: string): LifeSpecimen {
   const node = tree.nodes[nodeId];
   if (!node) throw new Error('节点不存在');
+  // 已被修剪或上游枝桠已被修剪的节点无法定格为标本
+  if (!isNodeActionable(tree, nodeId)) throw new Error('该节点所在枝桠已被修剪，无法采集标本');
 
   // Trace pathway back to root
   const pathWay: string[] = [];

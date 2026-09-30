@@ -1,4 +1,5 @@
 import { CounterfactualTree, LifeSpecimen, LifeNode } from '../core/models';
+import { isNodeActionable } from '../core/tree-engine';
 
 export interface TreeUIHandlers {
   onGrowNewTree: (assumption: string) => void;
@@ -62,7 +63,7 @@ export function renderTreeApp(
         <div class="tree-header">
           <h2>🌳 当前反事实时空谱系：${esc(tree.assumption)}</h2>
           <span style="font-size:12px;color:var(--text-muted);">
-            提示：点击【💧浇水】注入可能性能量，点击【✂️修剪】减除不想要的走向，点击【📌采集】定格标本
+            提示：点击【💧浇水】注入可能性能量，点击【✂️修剪】减除不想要的走向，点击【📌采集】定格标本；枝桠一旦被修剪，其自身与所有下游节点都将无法操作
           </span>
         </div>
 
@@ -74,32 +75,42 @@ export function renderTreeApp(
               <div class="column-header">${eraTitles[idx]}</div>
               ${layerNodes
                 .map(
-                  node => `
-                <div class="node-card ${node.isPruned ? 'pruned' : ''}" 
-                     style="--cat-color: ${node.color};" 
+                  node => {
+                    // 节点可操作状态与引擎守卫保持同一来源：自身及所有祖先均未被修剪
+                    const actionable = isNodeActionable(tree, node.id);
+                    const statusHint = node.isPruned
+                      ? '🥀 该枝桠已被修剪，无法浇水 / 采集标本'
+                      : '🥀 上游枝桠已被修剪，此节点已随之失活';
+                    const disabledAttr = actionable ? '' : 'disabled';
+                    return `
+                <div class="node-card ${actionable ? '' : 'pruned'}"
+                     style="--cat-color: ${node.color};"
                      data-id="${node.id}">
                   <span class="node-category-tag">${esc(node.categoryName)}</span>
                   <div class="node-title">${esc(node.title)}</div>
                   <div class="node-desc">${esc(node.scenarioDescription)}</div>
                   <div class="node-quote">${esc(node.specimenQuote)}</div>
-                  
+
                   <div class="vitality-bar-bg">
                     <div class="vitality-bar-fill" style="width: ${node.vitality}%;"></div>
                   </div>
 
+                  ${actionable ? '' : `<div class="node-status-hint">${statusHint}</div>`}
+
                   <div class="node-actions">
-                    <button class="btn-action btn-water" data-id="${node.id}" title="注入生命力" ${node.isPruned ? 'disabled' : ''}>
+                    <button class="btn-action btn-water" data-id="${node.id}" title="${actionable ? '注入生命力' : '该枝桠已被修剪，无法浇水'}" ${disabledAttr}>
                       💧 浇水 (${node.waterCount})
                     </button>
-                    <button class="btn-action btn-prune" data-id="${node.id}" title="剪除此分支">
+                    <button class="btn-action btn-prune" data-id="${node.id}" title="${actionable ? '剪除此分支' : '该枝桠已被修剪'}" ${disabledAttr}>
                       ✂️ 修剪
                     </button>
-                    <button class="btn-action btn-harvest" data-id="${node.id}" title="收录进标本馆">
+                    <button class="btn-action btn-harvest" data-id="${node.id}" title="${actionable ? '收录进标本馆' : '该枝桠已被修剪，无法采集标本'}" ${disabledAttr}>
                       📌 采集标本
                     </button>
                   </div>
                 </div>
-              `
+              `;
+                  }
                 )
                 .join('')}
             </div>
