@@ -42,9 +42,13 @@ function refreshView() {
         refreshView();
       },
       onHarvestNode: (nodeId: string) => {
-        const sp = treeAdapter.harvest(currentTree, nodeId);
-        specimenAdapter.save(sp);
-        alert(`已成功将节点【${sp.title}】收入平行人生标本馆！`);
+        try {
+          const sp = treeAdapter.harvest(currentTree, nodeId);
+          specimenAdapter.save(sp);
+          alert(`已成功将节点【${sp.title}】收入平行人生标本馆！`);
+        } catch (err) {
+          alert(err instanceof Error ? err.message : '该节点暂时无法采集标本');
+        }
         refreshView();
       },
       onDeleteSpecimen: (id: string) => {

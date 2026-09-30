@@ -153,7 +153,9 @@ export function buildCounterfactualTree(assumption: string): CounterfactualTree 
 
 export function waterBranch(tree: CounterfactualTree, nodeId: string): CounterfactualTree {
   const target = tree.nodes[nodeId];
-  if (!target) return tree;
+  // 统一可操作状态：已修剪的分支（含父节点被修剪后级联枯萎的后代）不可再浇水，
+  // 否则枯萎节点会恢复生命力，甚至在枯枝上重新萌出“活的”奇遇分支
+  if (!target || target.isPruned) return tree;
 
   target.vitality = Math.min(100, target.vitality + 20);
   target.waterCount += 1;
@@ -201,6 +203,8 @@ export function pruneBranch(tree: CounterfactualTree, nodeId: string): Counterfa
 export function harvestSpecimen(tree: CounterfactualTree, nodeId: string): LifeSpecimen {
   const node = tree.nodes[nodeId];
   if (!node) throw new Error('节点不存在');
+  // 已修剪的分支已枯萎，无法定格为标本
+  if (node.isPruned) throw new Error('该分支已被修剪，枯萎的走向无法采集为标本');
 
   // Trace pathway back to root
   const pathWay: string[] = [];

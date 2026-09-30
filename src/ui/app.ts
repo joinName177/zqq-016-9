@@ -62,7 +62,7 @@ export function renderTreeApp(
         <div class="tree-header">
           <h2>🌳 当前反事实时空谱系：${esc(tree.assumption)}</h2>
           <span style="font-size:12px;color:var(--text-muted);">
-            提示：点击【💧浇水】注入可能性能量，点击【✂️修剪】减除不想要的走向，点击【📌采集】定格标本
+            提示：点击【💧浇水】注入可能性能量，点击【✂️修剪】减除不想要的走向，点击【📌采集】定格标本；已修剪的分支及其后代将一并枯萎，无法再浇水或采集
           </span>
         </div>
 
@@ -75,26 +75,33 @@ export function renderTreeApp(
               ${layerNodes
                 .map(
                   node => `
-                <div class="node-card ${node.isPruned ? 'pruned' : ''}" 
-                     style="--cat-color: ${node.color};" 
+                <div class="node-card ${node.isPruned ? 'pruned' : ''}"
+                     style="--cat-color: ${node.color};"
                      data-id="${node.id}">
                   <span class="node-category-tag">${esc(node.categoryName)}</span>
+                  ${node.isPruned ? '<span class="node-pruned-tag">✂️ 已修剪</span>' : ''}
                   <div class="node-title">${esc(node.title)}</div>
                   <div class="node-desc">${esc(node.scenarioDescription)}</div>
                   <div class="node-quote">${esc(node.specimenQuote)}</div>
-                  
+
                   <div class="vitality-bar-bg">
                     <div class="vitality-bar-fill" style="width: ${node.vitality}%;"></div>
                   </div>
 
                   <div class="node-actions">
-                    <button class="btn-action btn-water" data-id="${node.id}" title="注入生命力" ${node.isPruned ? 'disabled' : ''}>
+                    <button class="btn-action btn-water" data-id="${node.id}"
+                            title="${node.isPruned ? '分支已修剪，无法再浇水' : '注入生命力'}"
+                            ${node.isPruned ? 'disabled' : ''}>
                       💧 浇水 (${node.waterCount})
                     </button>
-                    <button class="btn-action btn-prune" data-id="${node.id}" title="剪除此分支">
+                    <button class="btn-action btn-prune" data-id="${node.id}"
+                            title="${node.isPruned ? '分支已修剪' : '剪除此分支'}"
+                            ${node.isPruned ? 'disabled' : ''}>
                       ✂️ 修剪
                     </button>
-                    <button class="btn-action btn-harvest" data-id="${node.id}" title="收录进标本馆">
+                    <button class="btn-action btn-harvest" data-id="${node.id}"
+                            title="${node.isPruned ? '分支已修剪，无法采集标本' : '收录进标本馆'}"
+                            ${node.isPruned ? 'disabled' : ''}>
                       📌 采集标本
                     </button>
                   </div>
@@ -124,7 +131,8 @@ export function renderTreeApp(
               specimens.length === 0
                 ? `
               <div style="text-align:center;padding:40px;color:var(--text-muted);">
-                🌱 标本柜暂空。请在反事实树上点击节点的【📌 采集标本】按钮，将某段平行人生命运封存入馆。
+                🌱 标本柜暂空。请在反事实树上点击节点的【📌 采集标本】按钮，将某段平行人生命运封存入馆。<br />
+                <span style="font-size:12px;">（已修剪的枯萎分支无法采集标本，只有仍然鲜活的分支才能定格。）</span>
               </div>
             `
                 : `

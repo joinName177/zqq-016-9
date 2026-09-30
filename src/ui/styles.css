@@ -250,6 +250,18 @@ body {
   margin-bottom: 6px;
 }
 
+.node-pruned-tag {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--rose);
+  border: 1px dashed var(--rose);
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 6px;
+  margin-left: 6px;
+}
+
 .node-title {
   font-size: 14px;
   font-weight: 700;
@@ -310,6 +322,16 @@ body {
 .btn-action:hover {
   border-color: var(--gold);
   color: var(--gold);
+}
+
+.btn-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-action:disabled:hover {
+  border-color: var(--tree-border);
+  color: var(--text-main);
 }
 
 .btn-water:hover {
